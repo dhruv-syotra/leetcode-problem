@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+
+#define MAX_SIZE 100
+
+typedef struct {
+    int key;
+    int index;
+} HashEntry;
+HashEntry hash_map[MAX_SIZE];
+int hash(int key) {
+    return abs(key) % MAX_SIZE;
+}
+void two_sum(int* nums, int numsSize, int target) {
+    for (int i = 0; i < MAX_SIZE; i++) {
+        hash_map[i].key = -1;
+    }
+    for (int i = 0; i < numsSize; i++) {
+        int complement = target - nums[i];
+        int hash_index = hash(complement);
+        if (hash_map[hash_index].key == complement) {
+            printf("%d %d\n", hash_map[hash_index].index, i);
+            return;
+        }
+        hash_index = hash(nums[i]);
+        hash_map[hash_index].key = nums[i];
+        hash_map[hash_index].index = i;
+    }
+}
+
+int main() {
+    int n, target;
+    scanf("%d", &n);
+    int nums[n];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &nums[i]);
+    }
+    scanf("%d", &target);
+    two_sum(nums, n, target);
+    return 0;
+}
