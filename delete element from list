@@ -3,8 +3,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include <stdio.h>
-
 void deleteFirstOccurrence(int arr[], int *size, int element) {
     int i, j;
     for (i = 0; i < *size; i++) {
