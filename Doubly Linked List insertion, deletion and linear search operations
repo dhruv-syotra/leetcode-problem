@@ -1,0 +1,139 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node* prev;
+    struct Node* next;
+} Node;
+Node* createNode(int value) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (!newNode) {
+        printf("Memory allocation error\n");
+        exit(1);
+    }
+    newNode->data = value;
+    newNode->prev = NULL;
+    newNode->next = NULL;
+    return newNode;
+}
+void insertAtBeginning(Node** head, int value) {
+    Node* newNode = createNode(value);
+    newNode->next = *head;
+    if (*head != NULL) {
+        (*head)->prev = newNode;
+    }
+    *head = newNode;
+    printf("Inserted %d at beginning.\n", value);
+}
+void insertAtEnd(Node** head, int value) {
+    Node* newNode = createNode(value);
+    if (*head == NULL) {
+        *head = newNode;
+        printf("Inserted %d at end.\n", value);
+        return;
+    }
+    Node* temp = *head;
+    while (temp->next != NULL)
+        temp = temp->next;
+
+    temp->next = newNode;
+    newNode->prev = temp;
+    printf("Inserted %d at end.\n", value);
+}
+void insertAtPosition(Node** head, int position, int value) {
+    if (position == 0) {
+        insertAtBeginning(head, value);
+        return;
+    }
+
+    Node* temp = *head;
+    for (int i = 0; i < position - 1 && temp != NULL; i++)
+        temp = temp->next;
+
+    if (temp == NULL) {
+        printf("Position out of range.\n");
+        return;
+    }
+
+    Node* newNode = createNode(value);
+    newNode->next = temp->next;
+    newNode->prev = temp;
+
+    if (temp->next != NULL)
+        temp->next->prev = newNode;
+
+    temp->next = newNode;
+    printf("Inserted %d at position %d.\n", value, position);
+}
+void deleteByValue(Node** head, int value) {
+    Node* temp = *head;
+
+    while (temp != NULL && temp->data != value)
+        temp = temp->next;
+
+    if (temp == NULL) {
+        printf("Value %d not found.\n", value);
+        return;
+    }
+
+    if (temp->prev != NULL)
+        temp->prev->next = temp->next;
+    else
+        *head = temp->next; 
+
+    if (temp->next != NULL)
+        temp->next->prev = temp->prev;
+
+    free(temp);
+    printf("Deleted value %d.\n", value);
+}
+int linearSearch(Node* head, int key) {
+    int index = 0;
+    while (head != NULL) {
+        if (head->data == key) {
+            printf("Value %d found at position %d.\n", key, index);
+            return index;
+        }
+        head = head->next;
+        index++;
+    }
+    printf("Value %d not found.\n", key);
+    return -1;
+}
+void displayForward(Node* head) {
+    printf("List (forward): ");
+    while (head != NULL) {
+        printf("%d <-> ", head->data);
+        if (head->next == NULL) break; // Save last node
+        head = head->next;
+    }
+    printf("NULL\n");
+}
+void displayBackward(Node* head) {
+    if (head == NULL) return;
+    while (head->next != NULL)
+        head = head->next;
+
+    printf("List (backward): ");
+    while (head != NULL) {
+        printf("%d <-> ", head->data);
+        head = head->prev;
+    }
+    printf("NULL\n");
+}
+int main() {
+    Node* head = NULL;
+    insertAtEnd(&head, 10);
+    insertAtBeginning(&head, 5);
+    insertAtEnd(&head, 20);
+    insertAtPosition(&head, 1, 15);
+    displayForward(head);
+    displayBackward(head);
+    linearSearch(head, 15);
+    linearSearch(head, 99);
+    deleteByValue(&head, 15);
+    displayForward(head);
+    deleteByValue(&head, 99);
+    return 0;
+}
