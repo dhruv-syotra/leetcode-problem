@@ -1,0 +1,160 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <math.h>
+#define MAX 100
+typedef struct {
+    int data[MAX];
+    int top;
+} Stack;
+void init(Stack *s) {
+    s->top = -1;
+}
+int isEmpty(Stack *s) {
+    return s->top == -1;
+}
+void push(Stack *s, int val) {
+    if (s->top == MAX - 1) {
+        printf("Stack overflow!\n");
+        exit(1);
+    }
+    s->data[++s->top] = val;
+}
+int pop(Stack *s) {
+    if (isEmpty(s)) {
+        printf("Stack underflow!\n");
+        exit(1);
+    }
+    return s->data[s->top--];
+}
+int peek(Stack *s) {
+    return s->data[s->top];
+}
+int evalPostfix(char *exp) {
+    Stack s;
+    init(&s);
+    int i, op1, op2;
+    for (i = 0; exp[i]; i++) {
+        if (isdigit(exp[i])) {
+            push(&s, exp[i] - '0');
+        } else {
+            op2 = pop(&s);
+            op1 = pop(&s);
+            switch (exp[i]) {
+                case '+': push(&s, op1 + op2); break;
+                case '-': push(&s, op1 - op2); break;
+                case '*': push(&s, op1 * op2); break;
+                case '/': push(&s, op1 / op2); break;
+            }
+        }
+    }
+    return pop(&s);
+}
+int evalPrefix(char *exp) {
+    Stack s;
+    init(&s);
+    int i, op1, op2;
+    int len = strlen(exp);
+
+    for (i = len - 1; i >= 0; i--) {
+        if (isdigit(exp[i])) {
+            push(&s, exp[i] - '0');
+        } else {
+            op1 = pop(&s);
+            op2 = pop(&s);
+            switch (exp[i]) {
+                case '+': push(&s, op1 + op2); break;
+                case '-': push(&s, op1 - op2); break;
+                case '*': push(&s, op1 * op2); break;
+                case '/': push(&s, op1 / op2); break;
+            }
+        }
+    }
+    return pop(&s);
+}
+int precedence(char op) {
+    switch (op) {
+        case '+':
+        case '-': return 1;
+        case '*':
+        case '/': return 2;
+    }
+    return 0;
+}
+
+void infixToPostfix(char *infix, char *postfix) {
+    Stack s;
+    init(&s);
+    int i, k = 0;
+    char ch;
+
+    for (i = 0; infix[i]; i++) {
+        ch = infix[i];
+
+        if (isdigit(ch)) {
+            postfix[k++] = ch;
+        } else if (ch == '(') {
+            push(&s, ch);
+        } else if (ch == ')') {
+            while (!isEmpty(&s) && peek(&s) != '(') {
+                postfix[k++] = pop(&s);
+            }
+            pop(&s);  // pop '('
+        } else {  // operator
+            while (!isEmpty(&s) && precedence(peek(&s)) >= precedence(ch)) {
+                postfix[k++] = pop(&s);
+            }
+            push(&s, ch);
+        }
+    }
+
+    while (!isEmpty(&s)) {
+        postfix[k++] = pop(&s);
+    }
+
+    postfix[k] = '\0';
+}
+int main() {
+    char expr[100], postfix[100];
+    int result;
+    int choice;
+
+    while (1) {
+        printf("\n--- Expression Evaluation ---\n");
+        printf("1. Evaluate Postfix\n");
+        printf("2. Evaluate Prefix\n");
+        printf("3. Evaluate Infix\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter postfix expression: ");
+                scanf("%s", expr);
+                result = evalPostfix(expr);
+                printf("Result: %d\n", result);
+                break;
+            case 2:
+                printf("Enter prefix expression: ");
+                scanf("%s", expr);
+                result = evalPrefix(expr);
+                printf("Result: %d\n", result);
+                break;
+            case 3:
+                printf("Enter infix expression: ");
+                scanf("%s", expr);
+                infixToPostfix(expr, postfix);
+                result = evalPostfix(postfix);
+                printf("Postfix: %s\n", postfix);
+                printf("Result: %d\n", result);
+                break;
+            case 4:
+                exit(0);
+            default:
+                printf("Invalid choice!\n");
+        }
+    }
+    return 0;
+}
