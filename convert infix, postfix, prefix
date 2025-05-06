@@ -1,0 +1,225 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX 100
+
+// Stack for characters
+typedef struct {
+    char data[MAX][MAX];
+    int top;
+} Stack;
+
+void init(Stack *s) {
+    s->top = -1;
+}
+
+int isEmpty(Stack *s) {
+    return s->top == -1;
+}
+
+void push(Stack *s, char *str) {
+    if (s->top == MAX - 1) {
+        printf("Stack Overflow\n");
+        exit(1);
+    }
+    strcpy(s->data[++s->top], str);
+}
+
+char* pop(Stack *s) {
+    if (isEmpty(s)) {
+        printf("Stack Underflow\n");
+        exit(1);
+    }
+    return s->data[s->top--];
+}
+
+char* peek(Stack *s) {
+    return s->data[s->top];
+}
+
+// Stack for operators
+typedef struct {
+    char data[MAX];
+    int top;
+} CharStack;
+
+void cInit(CharStack *s) {
+    s->top = -1;
+}
+
+int cIsEmpty(CharStack *s) {
+    return s->top == -1;
+}
+
+void cPush(CharStack *s, char val) {
+    s->data[++s->top] = val;
+}
+
+char cPop(CharStack *s) {
+    return s->data[s->top--];
+}
+
+char cPeek(CharStack *s) {
+    return s->data[s->top];
+}
+
+int precedence(char op) {
+    if (op == '^') return 3;
+    if (op == '*' || op == '/') return 2;
+    if (op == '+' || op == '-') return 1;
+    return 0;
+}
+
+int isOperator(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '/' || c == '^';
+}
+void infixToPostfix(char *infix, char *postfix) {
+    CharStack opStack;
+    Stack outStack;
+    cInit(&opStack);
+    init(&outStack);
+
+    int i;
+    char ch, temp[2];
+
+    for (i = 0; infix[i]; i++) {
+        ch = infix[i];
+
+        if (isalnum(ch)) {
+            temp[0] = ch; temp[1] = '\0';
+            push(&outStack, temp);
+        } else if (ch == '(') {
+            cPush(&opStack, ch);
+        } else if (ch == ')') {
+            while (!cIsEmpty(&opStack) && cPeek(&opStack) != '(') {
+                temp[0] = cPop(&opStack); temp[1] = '\0';
+                push(&outStack, temp);
+            }
+            cPop(&opStack);
+        } else if (isOperator(ch)) {
+            while (!cIsEmpty(&opStack) && precedence(cPeek(&opStack)) >= precedence(ch)) {
+                temp[0] = cPop(&opStack); temp[1] = '\0';
+                push(&outStack, temp);
+            }
+            cPush(&opStack, ch);
+        }
+    }
+
+    while (!cIsEmpty(&opStack)) {
+        temp[0] = cPop(&opStack); temp[1] = '\0';
+        push(&outStack, temp);
+    }
+
+    postfix[0] = '\0';
+    for (int j = 0; j <= outStack.top; j++) {
+        strcat(postfix, outStack.data[j]);
+    }
+}
+void reverseStr(char *str) {
+    int len = strlen(str);
+    for (int i = 0; i < len / 2; i++) {
+        char tmp = str[i];
+        str[i] = str[len - i - 1];
+        str[len - i - 1] = tmp;
+    }
+}
+void swapBrackets(char *str) {
+    for (int i = 0; str[i]; i++) {
+        if (str[i] == '(') str[i] = ')';
+        else if (str[i] == ')') str[i] = '(';
+    }
+}
+void infixToPrefix(char *infix, char *prefix) {
+    char rev[MAX], post[MAX];
+    strcpy(rev, infix);
+    reverseStr(rev);
+    swapBrackets(rev);
+
+    infixToPostfix(rev, post);
+    strcpy(prefix, post);
+    reverseStr(prefix);
+}
+void postfixToInfix(char *postfix, char *infix) {
+    Stack s;
+    init(&s);
+    char op1[MAX], op2[MAX], temp[MAX];
+
+    for (int i = 0; postfix[i]; i++) {
+        if (isalnum(postfix[i])) {
+            char t[2] = {postfix[i], '\0'};
+            push(&s, t);
+        } else if (isOperator(postfix[i])) {
+            strcpy(op2, pop(&s));
+            strcpy(op1, pop(&s));
+            sprintf(temp, "(%s%c%s)", op1, postfix[i], op2);
+            push(&s, temp);
+        }
+    }
+    strcpy(infix, pop(&s));
+}
+void prefixToInfix(char *prefix, char *infix) {
+    Stack s;
+    init(&s);
+    char op1[MAX], op2[MAX], temp[MAX];
+    int len = strlen(prefix);
+    for (int i = len - 1; i >= 0; i--) {
+        if (isalnum(prefix[i])) {
+            char t[2] = {prefix[i], '\0'};
+            push(&s, t);
+        } else if (isOperator(prefix[i])) {
+            strcpy(op1, pop(&s));
+            strcpy(op2, pop(&s));
+            sprintf(temp, "(%s%c%s)", op1, prefix[i], op2);
+            push(&s, temp);
+        }
+    }
+    strcpy(infix, pop(&s));
+}
+int main() {
+    char infix[MAX], postfix[MAX], prefix[MAX];
+    int choice;
+    while (1) {
+        printf("\n--- Expression Conversion ---\n");
+        printf("1. Infix to Postfix\n");
+        printf("2. Infix to Prefix\n");
+        printf("3. Postfix to Infix\n");
+        printf("4. Prefix to Infix\n");
+        printf("5. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+        switch (choice) {
+            case 1:
+                printf("Enter Infix: ");
+                scanf("%s", infix);
+                infixToPostfix(infix, postfix);
+                printf("Postfix: %s\n", postfix);
+                break;
+            case 2:
+                printf("Enter Infix: ");
+                scanf("%s", infix);
+                infixToPrefix(infix, prefix);
+                printf("Prefix: %s\n", prefix);
+                break;
+            case 3:
+                printf("Enter Postfix: ");
+                scanf("%s", postfix);
+                postfixToInfix(postfix, infix);
+                printf("Infix: %s\n", infix);
+                break;
+            case 4:
+                printf("Enter Prefix: ");
+                scanf("%s", prefix);
+                prefixToInfix(prefix, infix);
+                printf("Infix: %s\n", infix);
+                break;
+            case 5:
+                exit(0);
+            default:
+                printf("Invalid choice!\n");
+        }
+    }
+    return 0;
+}
+
