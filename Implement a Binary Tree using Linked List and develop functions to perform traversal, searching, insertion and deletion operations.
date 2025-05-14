@@ -1,0 +1,222 @@
+#include <stdio.h>
+#include <stdlib.h>
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+struct QueueNode {
+    struct Node* treeNode;
+    struct QueueNode* next;
+};
+struct Queue {
+    struct QueueNode *front, *rear;
+};
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+struct Queue* createQueue() {
+    struct Queue* q = (struct Queue*)malloc(sizeof(struct Queue));
+    q->front = q->rear = NULL;
+    return q;
+}
+void enqueue(struct Queue* q, struct Node* node) {
+    struct QueueNode* temp = (struct QueueNode*)malloc(sizeof(struct QueueNode));
+    temp->treeNode = node;
+    temp->next = NULL;
+    if (q->rear == NULL) {
+        q->front = q->rear = temp;
+        return;
+    }
+    q->rear->next = temp;
+    q->rear = temp;
+}
+struct Node* dequeue(struct Queue* q) {
+    if (q->front == NULL) return NULL;
+    struct QueueNode* temp = q->front;
+    q->front = q->front->next;
+    if (q->front == NULL) q->rear = NULL;
+    struct Node* node = temp->treeNode;
+    free(temp);
+    return node;
+}
+int isQueueEmpty(struct Queue* q) {
+    return q->front == NULL;
+}
+void insert(struct Node** root, int value) {
+    struct Node* newNode = createNode(value);
+    if (*root == NULL) {
+        *root = newNode;
+        printf("Inserted %d as root\n", value);
+        return;
+    }
+    struct Queue* q = createQueue();
+    enqueue(q, *root);
+    while (!isQueueEmpty(q)) {
+        struct Node* temp = dequeue(q);
+        if (temp->left == NULL) {
+            temp->left = newNode;
+            printf("Inserted %d to the left of %d\n", value, temp->data);
+            break;
+        } else {
+            enqueue(q, temp->left);
+        }
+        if (temp->right == NULL) {
+            temp->right = newNode;
+            printf("Inserted %d to the right of %d\n", value, temp->data);
+            break;
+        } else {
+            enqueue(q, temp->right);
+        }
+    }
+}
+void inorder(struct Node* root) {
+    if (root == NULL) return;
+    inorder(root->left);
+    printf("%d ", root->data);
+    inorder(root->right);
+}
+void preorder(struct Node* root) {
+    if (root == NULL) return;
+    printf("%d ", root->data);
+    preorder(root->left);
+    preorder(root->right);
+}
+void postorder(struct Node* root) {
+    if (root == NULL) return;
+    postorder(root->left);
+    postorder(root->right);
+    printf("%d ", root->data);
+}
+int search(struct Node* root, int value) {
+    if (root == NULL) return 0;
+    if (root->data == value) return 1;
+    return search(root->left, value) || search(root->right, value);
+}
+void deleteDeepest(struct Node* root, struct Node* delNode) {
+    struct Queue* q = createQueue();
+    enqueue(q, root);
+    struct Node* temp;
+    while (!isQueueEmpty(q)) {
+        temp = dequeue(q);
+        if (temp == delNode) {
+            temp = NULL;
+            free(delNode);
+            return;
+        }
+        if (temp->right) {
+            if (temp->right == delNode) {
+                temp->right = NULL;
+                free(delNode);
+                return;
+            } else {
+                enqueue(q, temp->right);
+            }
+        }
+        if (temp->left) {
+            if (temp->left == delNode) {
+                temp->left = NULL;
+                free(delNode);
+                return;
+            } else {
+                enqueue(q, temp->left);
+            }
+        }
+    }
+}
+void delete(struct Node* root, int value) {
+    if (root == NULL) {
+        printf("Tree is empty.\n");
+        return;
+    }
+    if (root->left == NULL && root->right == NULL) {
+        if (root->data == value) {
+            free(root);
+            root = NULL;
+            printf("Tree is now empty.\n");
+            return;
+        } else {
+            printf("Value not found.\n");
+            return;
+        }
+    }
+    struct Queue* q = createQueue();
+    enqueue(q, root);
+    struct Node* temp;
+    struct Node* keyNode = NULL;
+    while (!isQueueEmpty(q)) {
+        temp = dequeue(q);
+        if (temp->data == value)
+            keyNode = temp;
+        if (temp->left)
+            enqueue(q, temp->left);
+        if (temp->right)
+            enqueue(q, temp->right);
+    }
+    if (keyNode != NULL) {
+        int x = temp->data;
+        deleteDeepest(root, temp);
+        keyNode->data = x;
+        printf("Deleted %d\n", value);
+    } else {
+        printf("Value %d not found in tree.\n", value);
+    }
+}
+int main() {
+    struct Node* root = NULL;
+    int choice, value;
+    while (1) {
+        printf("\n--- Menu ---\n");
+        printf("1. Insert\n");
+        printf("2. Inorder Traversal\n");
+        printf("3. Preorder Traversal\n");
+        printf("4. Postorder Traversal\n");
+        printf("5. Search\n");
+        printf("6. Delete\n");
+        printf("7. Exit\n");
+        printf("Choose option: ");
+        scanf("%d", &choice);
+        switch (choice) {
+            case 1:
+                printf("Enter value to insert: ");
+                scanf("%d", &value);
+                insert(&root, value);
+                break;
+            case 2:
+                printf("Inorder: ");
+                inorder(root);
+                printf("\n");
+                break;
+            case 3:
+                printf("Preorder: ");
+                preorder(root);
+                printf("\n");
+                break;
+            case 4:
+                printf("Postorder: ");
+                postorder(root);
+                printf("\n");
+                break;
+            case 5:
+                printf("Enter value to search: ");
+                scanf("%d", &value);
+                if (search(root, value))
+                    printf("%d found in the tree.\n", value);
+                else
+                    printf("%d not found in the tree.\n", value);
+                break;
+            case 6:
+                printf("Enter value to delete: ");
+                scanf("%d", &value);
+                delete(root, value);
+                break;
+            case 7:
+                return 0;
+            default:
+                printf("Invalid choice.\n");
+        }
+    }
+}
