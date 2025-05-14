@@ -1,0 +1,99 @@
+#include <stdio.h>
+#include <stdlib.h>
+struct Node {
+    int data;
+    struct Node* next;
+};
+struct Node* head = NULL;
+void insert(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    if (head == NULL) {
+        head = newNode;
+        newNode->next = head;
+    } else {
+        struct Node* temp = head;
+        while (temp->next != head) {
+            temp = temp->next;
+        }
+        temp->next = newNode;
+        newNode->next = head;
+    }
+}
+void delete(int key) {
+    if (head == NULL) {
+        printf("List is empty.\n");
+        return;
+    }
+    struct Node *curr = head, *prev = NULL;
+    if (head->data == key && head->next == head) {
+        free(head);
+        head = NULL;
+        return;
+    }
+    if (head->data == key) {
+        struct Node* temp = head;
+        while (temp->next != head)
+            temp = temp->next;
+        temp->next = head->next;
+        struct Node* toDelete = head;
+        head = head->next;
+        free(toDelete);
+        return;
+    }
+    do {
+        prev = curr;
+        curr = curr->next;
+        if (curr->data == key) {
+            prev->next = curr->next;
+            free(curr);
+            return;
+        }
+    } while (curr != head);
+    printf("Node with value %d not found.\n", key);
+}
+int search(int key) {
+    if (head == NULL) return 0;
+    struct Node* temp = head;
+    do {
+        if (temp->data == key)
+            return 1;
+        temp = temp->next;
+    } while (temp != head);
+
+    return 0;
+}
+void display() {
+    if (head == NULL) {
+        printf("List is empty.\n");
+        return;
+    }
+    struct Node* temp = head;
+    printf("Circular Linked List: ");
+    do {
+        printf("%d -> ", temp->data);
+        temp = temp->next;
+    } while (temp != head);
+    printf("(back to head)\n");
+}
+int main() {
+    insert(10);
+    insert(20);
+    insert(30);
+    display(); 
+
+    delete(20);
+    display(); 
+
+    if (search(30))
+        printf("Found 30\n");
+    else
+        printf("30 not found\n");
+
+    if (search(40))
+        printf("Found 40\n");
+    else
+        printf("40 not found\n");
+
+    return 0;
+}
